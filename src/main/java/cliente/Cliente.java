@@ -8,6 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Optional;
 import java.util.Scanner;
@@ -37,18 +38,15 @@ public class Cliente {
     }
 
     private static void enviarRequisicao(String entrada) throws IOException {
-        DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-        output.writeBytes(entrada);
+        PrintWriter output = new PrintWriter(socket.getOutputStream());
+        output.println(entrada);
         output.flush();
     }
 
     private static String getRespostaServidor() throws IOException {
-        DataInputStream resposta = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-        BufferedReader reader = new BufferedReader(new InputStreamReader(resposta));
-
-        Optional<String> body = reader.lines().reduce((i, s) -> i + s);
-
-        return body.orElse("Sem resposta do servidor :(   ...");
+        InputStreamReader resposta = new InputStreamReader(new BufferedInputStream(socket.getInputStream()));
+        BufferedReader reader = new BufferedReader(resposta);
+        return reader.readLine();
     }
 
     private static void abriConexao() throws IOException {

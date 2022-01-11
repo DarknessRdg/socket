@@ -7,7 +7,9 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -30,7 +32,7 @@ public class Servidor {
         InetAddress inet = serverSocket.getInetAddress();
         System.out.println("HostAddress: " + inet.getHostAddress());
         System.out.println("HostName: " + inet.getHostName());
-        System.out.println("CanonicalName: " + inet.getCanonicalHostName() + "\n");
+        System.out.println("CanonicalName: " + inet.getCanonicalHostName());
 
         escutarRequisicoes();
     }
@@ -40,7 +42,6 @@ public class Servidor {
             Socket conexao = abrirConexaoSocke();
             processarConexao(conexao);
             conexao.close();
-            break;
         }
     }
 
@@ -49,30 +50,31 @@ public class Servidor {
     }
 
     private static void processarConexao(Socket conexao) throws IOException {
-        System.out.println("Conxeão aberta com: " + conexao.getInetAddress().getHostAddress());
+        System.out.println("\n-------------\nConxeão aberta com: " + conexao.getInetAddress().getHostAddress());
 
-        DataOutputStream respostaStream = new DataOutputStream(conexao.getOutputStream());
-        DataInputStream requisicao = new DataInputStream(new BufferedInputStream(conexao.getInputStream()));
+        InputStreamReader in = new InputStreamReader(conexao.getInputStream());
+        BufferedReader requisicaoReader = new BufferedReader(in);
 
-        String body = getBody(requisicao);
+        PrintWriter respostaStream = new PrintWriter(conexao.getOutputStream());
+
+        String body = getBody(requisicaoReader);
         System.out.println("Body da requisicao: " + body + "\n");
 
         String response = getResponse(body);
         System.out.println("Resposta da requisicao: " + response + "\n");
 
         enviarResponsta(respostaStream, response);
+
         System.out.println("Resposta enviada com sucesso!");
     }
 
-    private static void enviarResponsta(DataOutputStream respostaStream, String resposta) throws IOException {
-        respostaStream.writeUTF(resposta);
+    private static void enviarResponsta(PrintWriter respostaStream, String resposta) throws IOException {
+        respostaStream.println(resposta);
         respostaStream.flush();
     }
 
-    private static String getBody(DataInputStream requisicao) throws IOException {
-        BufferedReader requisicaoReader = new BufferedReader(new InputStreamReader(requisicao));
-
-       return requisicaoReader.readLine();
+    private static String getBody(BufferedReader reader) throws IOException {
+       return reader.readLine();
     }
 
     private static String getResponse(String body) {
@@ -80,7 +82,6 @@ public class Servidor {
     }
 
     private static String simularAplicacaoWeb(String input) {
-        return "REQUISIÇÃO TRATADA PELO SERVIDOR!\n" +
-                "VOCE DIGITOU: " + input;
+        return "O QUE VOCE DIGITOU, AGORA EM CAIXA ALTAS: " + input.toUpperCase();
     }
 }
